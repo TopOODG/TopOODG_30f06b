@@ -378,8 +378,11 @@ def main():
         feature_splitting = exp_config.get(
             "feature_splitting", config.get("feature_splitting", False)
         )
+        rank = exp_config.get("rank", config.get("rank", None))
+        if rank == -1 or rank is None:
+            rank = "full"
         print(
-            f"Aggregating results for config dataset={dataset_name}, model={model_name}, num_features={num_features}, feature_splitting={feature_splitting}"
+            f"Aggregating results for config dataset={dataset_name}, model={model_name}, num_features={num_features}, feature_splitting={feature_splitting}, rank={rank}"
         )
 
         w1_distances_id = []
@@ -388,13 +391,20 @@ def main():
             w1_path = Path(
                 f"{folder_name}/{dataset_name}_{model_name}/{model_name}_features_{num_features}_splitting_{feature_splitting}/seed_{seed:02d}/wasserstein_distances.pth"
             )
+            w1_path_rank = Path(
+                f"{folder_name}/{dataset_name}_{model_name}/{model_name}_features_{num_features}_splitting_{feature_splitting}_rank_{rank}/seed_{seed:02d}/wasserstein_distances.pth"
+            )
             if w1_path.exists():
                 w1_data = torch.load(w1_path)
                 w1_distances_id.append(w1_data["w1_distances_id"])
                 w1_distances_ood.append(w1_data["w1_distances_ood"])
+            elif w1_path_rank.exists():
+                w1_data = torch.load(w1_path_rank)
+                w1_distances_id.append(w1_data["w1_distances_id"])
+                w1_distances_ood.append(w1_data["w1_distances_ood"])
             else:
                 print(
-                    f"Warning: W1 distance file not found for seed {seed} at {w1_path}"
+                    f"Warning: W1 distance file not found for seed {seed} at {w1_path} or {w1_path_rank}. Skipping this seed for aggregation."
                 )
 
         if w1_distances_id and w1_distances_ood:
@@ -422,7 +432,7 @@ def main():
             }
             torch.save(
                 aggregated_results,
-                f"{folder_name}/{dataset_name}_{model_name}/{model_name}_features_{num_features}_splitting_{feature_splitting}/aggregated_wasserstein_distances.pth",
+                f"{folder_name}/{dataset_name}_{model_name}/{model_name}_features_{num_features}_splitting_{feature_splitting}_rank_{rank}/aggregated_wasserstein_distances.pth",
             )
 
             # plot using matplotlib
@@ -491,12 +501,12 @@ def main():
             plt.legend()
             plt.grid()
             plt.savefig(
-                f"{folder_name}/{dataset_name}_{model_name}/{model_name}_features_{num_features}_splitting_{feature_splitting}/w1_distance_plot.png"
+                f"{folder_name}/{dataset_name}_{model_name}/{model_name}_features_{num_features}_splitting_{feature_splitting}_rank_{rank}/w1_distance_plot.png"
             )
             plt.close()
         else:
             print(
-                f"Warning: No W1 distance data found for config dataset={dataset_name}, model={model_name}, num_features={num_features}, feature_splitting={feature_splitting}. Skipping aggregation and plot."
+                f"Warning: No W1 distance data found for config dataset={dataset_name}, model={model_name}, num_features={num_features}, feature_splitting={feature_splitting}, rank={rank}. Skipping aggregation and plot."
             )
 
     combined_plot_path = f"{folder_name}/figures/"
@@ -513,7 +523,7 @@ def main():
             w1_median = w1_all[dataset_name][key]["w1_median"]
             w1_iqr_lower = w1_all[dataset_name][key]["w1_iqr_lower"]
             w1_iqr_upper = w1_all[dataset_name][key]["w1_iqr_upper"]
-            label = f"{key[0]} features={key[1]} splitting={key[2]}"
+            label = f"{key[0]} features={key[1]} splitting={key[2]} rank={key[3]}"
             plt.plot(cps, w1_median, label=label, color="C" + str(i))
             plt.fill_between(
                 cps, w1_iqr_lower, w1_iqr_upper, alpha=0.3, color="C" + str(i)
