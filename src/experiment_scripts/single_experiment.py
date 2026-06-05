@@ -212,6 +212,12 @@ def parse_args():
         help="Whether to use feature splitting into positional"
         + " and dynamical features.",
     )
+    model_group.add_argument(
+        "--rank",
+        type=int,
+        default=None,
+        help="Rank of feature-dependent model parameters.",
+    )
 
     runtime_group = parser.add_argument_group("Runtime")
     runtime_group.add_argument(
@@ -400,6 +406,7 @@ def single_experiment(args=None):
             hidden_dim=args.hidden_dim,
             encoder=encoder,
             decoder=decoder,
+            rank=args.rank,
             num_train_subjects=X_train.shape[0],
             num_features=args.num_features,
             feature_splitting=args.feature_splitting,
@@ -412,6 +419,7 @@ def single_experiment(args=None):
             hidden_dim=args.hidden_dim,
             encoder=encoder,
             decoder=decoder,
+            rank=args.rank,
             num_train_subjects=X_train.shape[0],
             num_features=args.num_features,
             feature_splitting=args.feature_splitting,

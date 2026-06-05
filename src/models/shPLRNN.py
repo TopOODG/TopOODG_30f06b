@@ -43,11 +43,12 @@ class shPLRNN(HierarchicalDSRModel):
         # feature-coupling weights (theta_v)
         if rank is None:
             self.A_v = nn.Parameter(torch.randn(num_features, latent_dim) * 1e-2)
-            self.W1_v = nn.Parameter(torch.randn(num_features, latent_dim, hidden_dim) * 1e-2)
-            self.W2_v = nn.Parameter(torch.randn(num_features, hidden_dim, latent_dim) * 1e-2)
+            self.W1_v_param = nn.Parameter(torch.randn(num_features, latent_dim, hidden_dim) * 1e-2)
+            self.W2_v_param = nn.Parameter(torch.randn(num_features, hidden_dim, latent_dim) * 1e-2)
             self.h1_v = nn.Parameter(torch.randn(num_features, latent_dim) * 1e-2)
             self.h2_v = nn.Parameter(torch.randn(num_features, hidden_dim) * 1e-2)
         else:
+            self.A_v = nn.Parameter(torch.randn(num_features, latent_dim) * 1e-2)
             self.W1_v_U = nn.Parameter(torch.randn(num_features, latent_dim, rank) * 1e-1)
             self.W1_v_V = nn.Parameter(torch.randn(num_features, rank, hidden_dim) * 1e-1)
             self.W2_v_U = nn.Parameter(torch.randn(num_features, hidden_dim, rank) * 1e-1)
@@ -55,15 +56,22 @@ class shPLRNN(HierarchicalDSRModel):
             self.h1_v = nn.Parameter(torch.randn(num_features, latent_dim) * 1e-2)
             self.h2_v = nn.Parameter(torch.randn(num_features, hidden_dim) * 1e-2)
 
-            @property
-            def W1_v(self):
-                return torch.einsum("fij,fjk->fik", self.W1_v_U, self.W1_v_V)
-
-            @property
-            def W2_v(self):
-                return torch.einsum("fij,fjk->fik", self.W2_v_U, self.W2_v_V)
 
         self.activation = nn.ReLU()
+
+    @property
+    def W1_v(self):
+        if self.rank is None:
+            return self.W1_v_param
+        else:
+            return torch.einsum("fij,fjk->fik", self.W1_v_U, self.W1_v_V)
+
+    @property
+    def W2_v(self):
+        if self.rank is None:
+            return self.W2_v_param
+        else:
+            return torch.einsum("fij,fjk->fik", self.W2_v_U, self.W2_v_V)
 
     def construct_parameters(
         self,

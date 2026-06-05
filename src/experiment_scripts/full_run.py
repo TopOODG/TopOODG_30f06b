@@ -211,10 +211,14 @@ def main():
                 "force_every_increase", config.get("force_every_increase", 0)
             )
             feature_noise = exp_config.get(
-                "feature_noise", config.get("feature_noise", "lambda e: 0.05 * (0.995 ** e)")
+                "feature_noise",
+                config.get("feature_noise", "lambda e: 0.05 * (0.995 ** e)"),
             )
             latent_dim = exp_config.get("latent_dim", config.get("latent_dim", 16))
             hidden_dim = exp_config.get("hidden_dim", config.get("hidden_dim", 128))
+            rank = exp_config.get("rank", config.get("rank", None))
+            if rank == -1:
+                rank = None
             validate_every = exp_config.get(
                 "validate_every", config.get("validate_every", 10)
             )
@@ -231,6 +235,12 @@ def main():
                 "memory_manifold_dims", config.get("memory_manifold_dims", 2)
             )
 
+            save_path = (
+                f"{folder_name}/"
+                f"{dataset_name}_{model_name}/"
+                f"{model_name}_features_{num_features}_splitting_{feature_splitting}"
+                f"_rank_{rank if rank is not None else 'full'}"
+            )
             for seed in range(num_seeds):
                 yield {
                     "dataset": dataset_name,
@@ -240,7 +250,9 @@ def main():
                     "batch_size": batch_size,
                     "num_batches_per_epoch": num_batches_per_epoch,
                     "learning_rate": learning_rate,
-                    "no_lr_scheduler": exp_config.get("no_lr_scheduler", config.get("no_lr_scheduler", False)),
+                    "no_lr_scheduler": exp_config.get(
+                        "no_lr_scheduler", config.get("no_lr_scheduler", False)
+                    ),
                     "tf_alpha": tf_alpha,
                     "tf_alpha_decay": tf_alpha_decay,
                     "tf_alpha_final": tf_alpha_final,
@@ -249,6 +261,7 @@ def main():
                     "feature_noise": feature_noise,
                     "latent_dim": latent_dim,
                     "hidden_dim": hidden_dim,
+                    "rank": rank,
                     "num_features": num_features,
                     "feature_splitting": feature_splitting,
                     "seed": seed,
@@ -262,7 +275,7 @@ def main():
                         config.get("torch_num_threads", cpu_threads_per_worker),
                     ),
                     "validate_every": validate_every,
-                    "save_path": f"{folder_name}/{dataset_name}_{model_name}/{model_name}_features_{num_features}_splitting_{feature_splitting}/seed_{seed:02d}",
+                    "save_path": f"{save_path}/seed_{seed:02d}",
                     "save_every": save_every,
                     "verbose": False,
                     "save_predicted_trajectories": False,
@@ -329,7 +342,9 @@ def main():
 
                 completed_successfully = True
             except BaseException:
-                print("Aborting full run. Cancelling queued jobs and stopping workers...")
+                print(
+                    "Aborting full run. Cancelling queued jobs and stopping workers..."
+                )
                 force_shutdown_process_pool(pool)
                 raise
             finally:
