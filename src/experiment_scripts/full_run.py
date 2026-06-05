@@ -470,7 +470,7 @@ def main():
                 w1_all[dataset_name]["cps_id"] = cps_id
             if not "cps_ood" in w1_all[dataset_name]:
                 w1_all[dataset_name]["cps_ood"] = cps_ood
-            w1_all[dataset_name][(model_name, num_features, feature_splitting)] = {
+            w1_all[dataset_name][(model_name, num_features, feature_splitting, rank)] = {
                 "cps": all_cps,
                 "w1_median": w1_median,
                 "w1_iqr_lower": w1_iqr_lower,
