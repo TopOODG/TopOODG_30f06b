@@ -1,0 +1,35 @@
+{
+    "parallel_workers": 16,
+    "gpus": [6, 7, 8, 9],
+    "num_seeds": 10,
+    "epochs": 1000,
+    "learning_rate": 1e-2,
+    "tf_alpha_decay": 0.995,
+    "steps_ahead": "lambda e: min(2 + (e // 25), 32)",
+    "latent_dim": 2,
+    "hidden_dim": 128,
+    "force_every": 4,
+    "force_every_increase": 100,
+    "plot_every": 50,
+    "features_l1": 1e-4,
+    "configs": [
+        {
+            "dataset": "selkov",
+            "model": "shPLRNN",
+            "num_features": 1,
+            "feature_splitting": true
+        },
+        {
+            "dataset": "selkov",
+            "model": "shPLRNN",
+            "num_features": 1,
+            "feature_splitting": false
+        },
+        {
+            "dataset": "selkov",
+            "model": "shPLRNN",
+            "num_features": 2,
+            "feature_splitting": false
+        }
+    ]
+}
